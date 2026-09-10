@@ -1,13 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import TextInput from './components/TextInput';
+import LanguageSelector from './components/LanguageSelector';
+import VoiceSelector from './components/VoiceSelector';
+import AudioControls from './components/AudioControls';
+import { LANGUAGES, VOICES } from './data/voices';
 
 export default function App() {
   const [text, setText] = useState('');
   const [selectedLanguage, setSelectedLanguage] = useState('en-US');
   const [selectedVoice, setSelectedVoice] = useState('en-US-JennyNeural');
+  const [speed, setSpeed] = useState(1.0);
+  const [pitch, setPitch] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
+
+  // Dynamically filter voices by selected language
+  const availableVoices = useMemo(() => {
+    return VOICES.filter((v) => v.language === selectedLanguage);
+  }, [selectedLanguage]);
+
+  // Handle language switch and auto-select matching first voice
+  const handleLanguageChange = (newLang) => {
+    setSelectedLanguage(newLang);
+    const firstVoice = VOICES.find((v) => v.language === newLang);
+    if (firstVoice) {
+      setSelectedVoice(firstVoice.id);
+    }
+  };
 
   return (
     <div className="app-container">
@@ -43,46 +63,41 @@ export default function App() {
           disabled={isGenerating}
         />
 
-        {/* Voice Configuration & Controls (Prepped for Day 5) */}
+        {/* Voice & Language Configuration (Day 5) */}
         <section className="glass-card" style={{ padding: '24px' }}>
-          <h3 style={{ fontSize: '1.05rem', marginBottom: '16px' }}>
-            Voice & Language Settings
-          </h3>
-          <div className="control-grid">
-            <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                Language
-              </label>
-              <select 
-                className="tts-select"
-                value={selectedLanguage}
-                onChange={(e) => setSelectedLanguage(e.target.value)}
-              >
-                <option value="en-US">English (United States)</option>
-                <option value="hi-IN">Hindi (India)</option>
-                <option value="gu-IN">Gujarati (India)</option>
-                <option value="mr-IN">Marathi (India)</option>
-                <option value="es-ES">Spanish (Spain)</option>
-                <option value="fr-FR">French (France)</option>
-                <option value="de-DE">German (Germany)</option>
-              </select>
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                Voice Persona
-              </label>
-              <select 
-                className="tts-select"
-                value={selectedVoice}
-                onChange={(e) => setSelectedVoice(e.target.value)}
-              >
-                <option value="en-US-JennyNeural">Jenny (Female - Neural)</option>
-                <option value="en-US-GuyNeural">Guy (Male - Neural)</option>
-                <option value="en-US-AriaNeural">Aria (Female - Expressive)</option>
-              </select>
-            </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h3 style={{ fontSize: '1.05rem', margin: 0 }}>
+              Voice & Language Settings
+            </h3>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+              {availableVoices.length} voices available for this language
+            </span>
           </div>
+
+          <div className="control-grid">
+            <LanguageSelector
+              selectedLanguage={selectedLanguage}
+              onLanguageChange={handleLanguageChange}
+              languages={LANGUAGES}
+              disabled={isGenerating}
+            />
+
+            <VoiceSelector
+              selectedVoice={selectedVoice}
+              onVoiceChange={setSelectedVoice}
+              availableVoices={availableVoices}
+              disabled={isGenerating}
+            />
+          </div>
+
+          {/* Speed & Pitch Customization (Day 5 / Section 13) */}
+          <AudioControls
+            speed={speed}
+            setSpeed={setSpeed}
+            pitch={pitch}
+            setPitch={setPitch}
+            disabled={isGenerating}
+          />
 
           <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end' }}>
             <button 
