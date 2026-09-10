@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import TextInput from './components/TextInput';
 
 export default function App() {
   const [text, setText] = useState('');
@@ -34,30 +35,13 @@ export default function App() {
           </div>
         </section>
 
-        {/* Text Input Section Container (Prepped for Day 4) */}
-        <section className="glass-card" style={{ padding: '24px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-            <label style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
-              Text Input
-            </label>
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-              Max 2000 characters
-            </span>
-          </div>
-
-          <textarea
-            className="tts-textarea"
-            placeholder="Type or paste your text here to convert into natural speech..."
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            maxLength={2000}
-          />
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-            <span>Characters: {text.length} / 2000</span>
-            <span>Words: {text.trim() ? text.trim().split(/\s+/).length : 0}</span>
-          </div>
-        </section>
+        {/* Modular Text Input Component (Day 4) */}
+        <TextInput
+          text={text}
+          setText={setText}
+          maxLength={2000}
+          disabled={isGenerating}
+        />
 
         {/* Voice Configuration & Controls (Prepped for Day 5) */}
         <section className="glass-card" style={{ padding: '24px' }}>
