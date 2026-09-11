@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function Navbar() {
+export default function Navbar({ serverOnline = false }) {
   return (
     <header className="header-bar">
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -41,13 +41,21 @@ export default function Navbar() {
             fontSize: '0.78rem',
             padding: '4px 10px',
             borderRadius: 'var(--radius-full)',
-            background: 'rgba(16, 185, 129, 0.12)',
-            border: '1px solid rgba(16, 185, 129, 0.3)',
-            color: '#10b981'
+            background: serverOnline ? 'rgba(16, 185, 129, 0.12)' : 'rgba(245, 158, 11, 0.12)',
+            border: `1px solid ${serverOnline ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`,
+            color: serverOnline ? '#10b981' : '#f59e0b'
           }}
         >
-          <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981', display: 'inline-block' }}></span>
-          Engine Ready
+          <span 
+            style={{ 
+              width: '6px', 
+              height: '6px', 
+              borderRadius: '50%', 
+              background: serverOnline ? '#10b981' : '#f59e0b', 
+              display: 'inline-block' 
+            }}
+          />
+          {serverOnline ? 'Engine Connected' : 'Engine Standby'}
         </div>
         <span 
           style={{

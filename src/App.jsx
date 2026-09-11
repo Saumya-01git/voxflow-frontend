@@ -1,11 +1,13 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import TextInput from './components/TextInput';
 import LanguageSelector from './components/LanguageSelector';
 import VoiceSelector from './components/VoiceSelector';
 import AudioControls from './components/AudioControls';
+import ErrorMessage from './components/ErrorMessage';
 import { LANGUAGES, VOICES } from './data/voices';
+import { synthesizeSpeech, checkHealth } from './services/api';
 
 export default function App() {
   const [text, setText] = useState('');
@@ -14,6 +16,21 @@ export default function App() {
   const [speed, setSpeed] = useState(1.0);
   const [pitch, setPitch] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState(null);
+  const [serverOnline, setServerOnline] = useState(false);
+
+  // Check backend server health on mount
+  useEffect(() => {
+    async function verifyHealth() {
+      try {
+        await checkHealth();
+        setServerOnline(true);
+      } catch {
+        setServerOnline(false);
+      }
+    }
+    verifyHealth();
+  }, []);
 
   // Dynamically filter voices by selected language
   const availableVoices = useMemo(() => {
@@ -29,11 +46,46 @@ export default function App() {
     }
   };
 
+  // Handle speech synthesis request (REST API call)
+  const handleGenerateSpeech = async () => {
+    if (!text.trim()) {
+      setError({ message: 'Text input cannot be empty. Please type or paste some text.' });
+      return;
+    }
+
+    setError(null);
+    setIsGenerating(true);
+
+    try {
+      const response = await synthesizeSpeech({
+        text: text.trim(),
+        language: selectedLanguage,
+        voice: selectedVoice,
+        speed,
+        pitch
+      });
+
+      console.log('Synthesis successful:', response);
+    } catch (err) {
+      console.error('TTS Synthesis error:', err);
+      setError(err);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   return (
     <div className="app-container">
-      <Navbar />
+      <Navbar serverOnline={serverOnline} />
 
       <main style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        {/* Error Alert Banner */}
+        <ErrorMessage
+          error={error}
+          onDismiss={() => setError(null)}
+          onRetry={handleGenerateSpeech}
+        />
+
         {/* Hero Section */}
         <section className="glass-card" style={{ padding: '24px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
@@ -90,7 +142,7 @@ export default function App() {
             />
           </div>
 
-          {/* Speed & Pitch Customization (Day 5 / Section 13) */}
+          {/* Speed & Pitch Customization */}
           <AudioControls
             speed={speed}
             setSpeed={setSpeed}
@@ -103,7 +155,7 @@ export default function App() {
             <button 
               className="btn-primary"
               disabled={!text.trim() || isGenerating}
-              onClick={() => setIsGenerating(true)}
+              onClick={handleGenerateSpeech}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
