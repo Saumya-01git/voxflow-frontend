@@ -18,8 +18,9 @@ export default function App() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState(null);
   const [serverOnline, setServerOnline] = useState(false);
+  const [generatedAudio, setGeneratedAudio] = useState(null);
 
-  // Check backend server health on mount
+  // Check backend server health on mount & periodically
   useEffect(() => {
     async function verifyHealth() {
       try {
@@ -46,10 +47,10 @@ export default function App() {
     }
   };
 
-  // Handle speech synthesis request (REST API call)
+  // Handle speech synthesis request (REST API handshake)
   const handleGenerateSpeech = async () => {
     if (!text.trim()) {
-      setError({ message: 'Text input cannot be empty. Please type or paste some text.' });
+      setError({ message: 'Text input cannot be empty. Please enter or paste some text.' });
       return;
     }
 
@@ -65,9 +66,17 @@ export default function App() {
         pitch
       });
 
-      console.log('Synthesis successful:', response);
+      setGeneratedAudio({
+        audioUrl: response.audioUrl,
+        text: text.trim(),
+        language: selectedLanguage,
+        voice: selectedVoice,
+        duration: response.duration || 4,
+        mode: response.mode || 'api-generated',
+        timestamp: new Date().toLocaleTimeString()
+      });
     } catch (err) {
-      console.error('TTS Synthesis error:', err);
+      console.error('TTS Handshake Error:', err);
       setError(err);
     } finally {
       setIsGenerating(false);
@@ -151,21 +160,71 @@ export default function App() {
             disabled={isGenerating}
           />
 
-          <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end' }}>
+          <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '14px' }}>
+            {generatedAudio && (
+              <span style={{ fontSize: '0.8rem', color: 'var(--success)' }}>
+                ✓ Speech generated ({generatedAudio.timestamp})
+              </span>
+            )}
             <button 
               className="btn-primary"
               disabled={!text.trim() || isGenerating}
               onClick={handleGenerateSpeech}
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-                <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-                <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
-              </svg>
-              <span>{isGenerating ? 'Synthesizing...' : 'Generate Speech'}</span>
+              {isGenerating ? (
+                <>
+                  <div className="sound-wave" style={{ height: '18px' }}>
+                    <span className="sound-bar" style={{ background: '#fff' }}></span>
+                    <span className="sound-bar" style={{ background: '#fff' }}></span>
+                    <span className="sound-bar" style={{ background: '#fff' }}></span>
+                  </div>
+                  <span>Synthesizing Audio...</span>
+                </>
+              ) : (
+                <>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+                  </svg>
+                  <span>Generate Speech</span>
+                </>
+              )}
             </button>
           </div>
         </section>
+
+        {/* Synthesis Handshake Confirmation (Day 7) */}
+        {generatedAudio && (
+          <section className="glass-card animate-fade-in" style={{ padding: '20px 24px', borderLeft: '4px solid var(--accent-primary)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                    Generated Audio Stream
+                  </span>
+                  <span style={{ fontSize: '0.72rem', padding: '2px 8px', borderRadius: '4px', background: 'rgba(99, 102, 241, 0.2)', color: '#818cf8' }}>
+                    ~{generatedAudio.duration}s Duration
+                  </span>
+                </div>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0 }}>
+                  Ready for playback and export. Hooked into API pipeline.
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={handleGenerateSpeech}
+                  disabled={isGenerating}
+                >
+                  Regenerate
+                </button>
+              </div>
+            </div>
+          </section>
+        )}
       </main>
 
       <Footer />
