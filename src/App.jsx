@@ -5,6 +5,7 @@ import TextInput from './components/TextInput';
 import LanguageSelector from './components/LanguageSelector';
 import VoiceSelector from './components/VoiceSelector';
 import AudioControls from './components/AudioControls';
+import AudioPlayer from './components/AudioPlayer';
 import ErrorMessage from './components/ErrorMessage';
 import { LANGUAGES, VOICES } from './data/voices';
 import { synthesizeSpeech, checkHealth } from './services/api';
@@ -194,36 +195,11 @@ export default function App() {
           </div>
         </section>
 
-        {/* Synthesis Handshake Confirmation (Day 7) */}
+        {/* Interactive Audio Player (Day 12 / Section 4.5 & 32) */}
         {generatedAudio && (
-          <section className="glass-card animate-fade-in" style={{ padding: '20px 24px', borderLeft: '4px solid var(--accent-primary)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                  <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-                    Generated Audio Stream
-                  </span>
-                  <span style={{ fontSize: '0.72rem', padding: '2px 8px', borderRadius: '4px', background: 'rgba(99, 102, 241, 0.2)', color: '#818cf8' }}>
-                    ~{generatedAudio.duration}s Duration
-                  </span>
-                </div>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0 }}>
-                  Ready for playback and export. Hooked into API pipeline.
-                </p>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <button
-                  type="button"
-                  className="btn-secondary"
-                  onClick={handleGenerateSpeech}
-                  disabled={isGenerating}
-                >
-                  Regenerate
-                </button>
-              </div>
-            </div>
-          </section>
+          <AudioPlayer
+            audioData={generatedAudio}
+          />
         )}
       </main>
 
