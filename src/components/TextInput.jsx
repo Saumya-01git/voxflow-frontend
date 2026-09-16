@@ -1,4 +1,5 @@
 import React from 'react';
+import FileUploader from './FileUploader';
 
 const SAMPLES = [
   {
@@ -60,6 +61,11 @@ export default function TextInput({ text, setText, maxLength = 2000, disabled = 
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <FileUploader
+            onTextExtracted={(content) => setText(content.slice(0, maxLength))}
+            disabled={disabled}
+          />
+
           <button
             type="button"
             className="chip-btn"

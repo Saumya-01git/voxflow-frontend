@@ -1,0 +1,66 @@
+import React, { useState } from 'react';
+
+export default function DownloadButton({ audioUrl, filename = 'voxflow_speech.mp3', disabled = false }) {
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownload = async () => {
+    if (!audioUrl || disabled) return;
+
+    setIsDownloading(true);
+
+    try {
+      if (audioUrl.startsWith('http') || audioUrl.startsWith('/audio/')) {
+        // Fetch audio blob and trigger direct download
+        const res = await fetch(audioUrl);
+        const blob = await res.blob();
+        const blobUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = filename.endsWith('.mp3') ? filename : `${filename}.mp3`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(blobUrl);
+      } else {
+        // Fallback for data URLs / simulated speech
+        const link = document.createElement('a');
+        link.href = audioUrl;
+        link.download = filename.endsWith('.mp3') ? filename : `${filename}.mp3`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    } catch (err) {
+      console.warn('Direct download fetch failed, opening link directly:', err);
+      window.open(audioUrl, '_blank');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      className="btn-secondary"
+      onClick={handleDownload}
+      disabled={disabled || !audioUrl || isDownloading}
+      title="Download synthesized audio (MP3)"
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '6px',
+        padding: '8px 14px',
+        borderRadius: 'var(--radius-md)',
+        fontWeight: 500,
+        fontSize: '0.82rem'
+      }}
+    >
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      <span>{isDownloading ? 'Downloading...' : 'Download MP3'}</span>
+    </button>
+  );
+}

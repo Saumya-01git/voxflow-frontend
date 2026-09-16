@@ -6,6 +6,7 @@ import LanguageSelector from './components/LanguageSelector';
 import VoiceSelector from './components/VoiceSelector';
 import AudioControls from './components/AudioControls';
 import AudioPlayer from './components/AudioPlayer';
+import SpeechHistory from './components/SpeechHistory';
 import ErrorMessage from './components/ErrorMessage';
 import { LANGUAGES, VOICES } from './data/voices';
 import { synthesizeSpeech, checkHealth } from './services/api';
@@ -20,6 +21,16 @@ export default function App() {
   const [error, setError] = useState(null);
   const [serverOnline, setServerOnline] = useState(false);
   const [generatedAudio, setGeneratedAudio] = useState(null);
+
+  // Speech generation history with LocalStorage persistence (Section 16 of PDF)
+  const [history, setHistory] = useState(() => {
+    try {
+      const saved = localStorage.getItem('voxflow_history');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
   // Check backend server health on mount & periodically
   useEffect(() => {
@@ -48,7 +59,7 @@ export default function App() {
     }
   };
 
-  // Handle speech synthesis request (REST API handshake)
+  // Handle speech synthesis request
   const handleGenerateSpeech = async () => {
     if (!text.trim()) {
       setError({ message: 'Text input cannot be empty. Please enter or paste some text.' });
@@ -67,14 +78,27 @@ export default function App() {
         pitch
       });
 
-      setGeneratedAudio({
+      const newAudioItem = {
+        id: Date.now().toString(),
         audioUrl: response.audioUrl,
         text: text.trim(),
         language: selectedLanguage,
         voice: selectedVoice,
         duration: response.duration || 4,
+        speed,
+        pitch,
         mode: response.mode || 'api-generated',
-        timestamp: new Date().toLocaleTimeString()
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        isFavorite: false
+      };
+
+      setGeneratedAudio(newAudioItem);
+
+      // Append to history and persist to localStorage
+      setHistory((prev) => {
+        const updated = [newAudioItem, ...prev].slice(0, 30); // keep up to 30 recent items
+        localStorage.setItem('voxflow_history', JSON.stringify(updated));
+        return updated;
       });
     } catch (err) {
       console.error('TTS Handshake Error:', err);
@@ -82,6 +106,31 @@ export default function App() {
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  // Toggle favorite in history
+  const handleToggleFavorite = (id) => {
+    setHistory((prev) => {
+      const updated = prev.map((item) =>
+        item.id === id ? { ...item, isFavorite: !item.isFavorite } : item
+      );
+      localStorage.setItem('voxflow_history', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  // Re-play / load item from history
+  const handleSelectHistory = (item) => {
+    setText(item.text);
+    setSelectedLanguage(item.language);
+    setSelectedVoice(item.voice);
+    setGeneratedAudio(item);
+  };
+
+  // Clear all history
+  const handleClearHistory = () => {
+    setHistory([]);
+    localStorage.removeItem('voxflow_history');
   };
 
   return (
@@ -117,7 +166,7 @@ export default function App() {
           </div>
         </section>
 
-        {/* Modular Text Input Component (Day 4) */}
+        {/* Modular Text Input Component with File Upload (Day 4 & 13) */}
         <TextInput
           text={text}
           setText={setText}
@@ -201,6 +250,14 @@ export default function App() {
             audioData={generatedAudio}
           />
         )}
+
+        {/* Speech History & Library (Day 13 / Section 16) */}
+        <SpeechHistory
+          history={history}
+          onSelectHistory={handleSelectHistory}
+          onToggleFavorite={handleToggleFavorite}
+          onClearHistory={handleClearHistory}
+        />
       </main>
 
       <Footer />
