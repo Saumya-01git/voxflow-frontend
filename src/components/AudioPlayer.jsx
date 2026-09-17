@@ -72,68 +72,68 @@ export default function AudioPlayer({ audioData, onDownload }) {
     }
   };
 
-  // Handle Time Update
+  // Sync current time as audio plays
   const handleTimeUpdate = () => {
     if (audioRef.current) {
       setCurrentTime(audioRef.current.currentTime);
     }
   };
 
-  // Handle Metadata Loaded
+  // Sync duration once metadata loads
   const handleLoadedMetadata = () => {
-    if (audioRef.current && !isNaN(audioRef.current.duration)) {
+    if (audioRef.current) {
       setDuration(audioRef.current.duration);
     }
   };
 
-  // Handle Audio Ended
+  // Handle scrubber drag / seek
+  const handleSeek = (e) => {
+    const newTime = parseFloat(e.target.value);
+    setCurrentTime(newTime);
+    if (audioRef.current) {
+      audioRef.current.currentTime = newTime;
+    }
+  };
+
+  // Handle audio end
   const handleEnded = () => {
     setIsPlaying(false);
     setCurrentTime(0);
   };
 
-  // Handle Scrubber Seek
-  const handleSeek = (e) => {
-    const seekTo = parseFloat(e.target.value);
-    setCurrentTime(seekTo);
+  // Change playback speed
+  const handleSpeedChange = (rate) => {
+    setPlaybackRate(rate);
     if (audioRef.current) {
-      audioRef.current.currentTime = seekTo;
+      audioRef.current.playbackRate = rate;
     }
   };
 
-  // Handle Volume
+  // Volume control
   const handleVolumeChange = (e) => {
     const val = parseFloat(e.target.value);
     setVolume(val);
     setIsMuted(val === 0);
     if (audioRef.current) {
       audioRef.current.volume = val;
-      audioRef.current.muted = val === 0;
     }
   };
 
+  // Toggle mute
   const toggleMute = () => {
-    if (audioRef.current) {
-      const nextMuted = !isMuted;
-      setIsMuted(nextMuted);
-      audioRef.current.muted = nextMuted;
+    if (isMuted) {
+      setIsMuted(false);
+      if (audioRef.current) audioRef.current.volume = volume || 1;
     } else {
-      setIsMuted(!isMuted);
-    }
-  };
-
-  // Handle Playback Speed
-  const handleSpeedChange = (speed) => {
-    setPlaybackRate(speed);
-    if (audioRef.current) {
-      audioRef.current.playbackRate = speed;
+      setIsMuted(true);
+      if (audioRef.current) audioRef.current.volume = 0;
     }
   };
 
   if (!audioData) return null;
 
   return (
-    <section className="glass-card animate-fade-in" style={{ padding: '24px' }}>
+    <section className="fairy-card animate-fade-in" style={{ padding: '26px 28px' }}>
       {/* Hidden audio element */}
       {audioSrc && (
         <audio
@@ -147,12 +147,12 @@ export default function AudioPlayer({ audioData, onDownload }) {
 
       {/* Header with Title and Playing Indicator */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           <div 
             style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: '10px',
+              width: '42px',
+              height: '42px',
+              borderRadius: '12px',
               background: 'var(--accent-gradient)',
               display: 'flex',
               alignItems: 'center',
@@ -160,21 +160,21 @@ export default function AudioPlayer({ audioData, onDownload }) {
               boxShadow: 'var(--accent-glow)'
             }}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
               <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
               <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
             </svg>
           </div>
           <div>
-            <h3 style={{ fontSize: '1.05rem', margin: 0 }}>Generated Audio Player</h3>
-            <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: 0 }}>
+            <h3 style={{ fontSize: '1.2rem', margin: 0, fontWeight: 700 }}>Generated Audio Player</h3>
+            <p style={{ fontSize: '0.92rem', color: 'var(--text-muted)', margin: '2px 0 0' }}>
               {audioData.voice} • {audioData.language}
             </p>
           </div>
         </div>
 
-        <div className="sound-wave" style={{ opacity: isPlaying ? 1 : 0.25 }}>
+        <div className="sound-wave" style={{ opacity: isPlaying ? 1 : 0.35 }}>
           <span className="sound-bar" style={{ animationPlayState: isPlaying ? 'running' : 'paused' }}></span>
           <span className="sound-bar" style={{ animationPlayState: isPlaying ? 'running' : 'paused' }}></span>
           <span className="sound-bar" style={{ animationPlayState: isPlaying ? 'running' : 'paused' }}></span>
@@ -184,7 +184,7 @@ export default function AudioPlayer({ audioData, onDownload }) {
       </div>
 
       {/* Timeline Scrubber & Timestamps */}
-      <div style={{ marginBottom: '16px' }}>
+      <div style={{ marginBottom: '18px' }}>
         <input
           type="range"
           className="audio-scrubber"
@@ -194,22 +194,22 @@ export default function AudioPlayer({ audioData, onDownload }) {
           value={currentTime}
           onChange={handleSeek}
         />
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '6px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-muted)', marginTop: '8px' }}>
           <span>{formatTime(currentTime)}</span>
           <span>{formatTime(duration)}</span>
         </div>
       </div>
 
       {/* Controls Deck */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-        {/* Play / Pause Primary Button */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '18px' }}>
+        {/* Play / Pause Primary Button & Speed presets */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           <button
             type="button"
             onClick={togglePlay}
             style={{
-              width: '46px',
-              height: '46px',
+              width: '52px',
+              height: '52px',
               borderRadius: '50%',
               background: 'var(--accent-gradient)',
               border: 'none',
@@ -224,19 +224,19 @@ export default function AudioPlayer({ audioData, onDownload }) {
             title={isPlaying ? 'Pause' : 'Play'}
           >
             {isPlaying ? (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
                 <rect x="6" y="4" width="4" height="16" rx="1"/>
                 <rect x="14" y="4" width="4" height="16" rx="1"/>
               </svg>
             ) : (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: '2px' }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: '2px' }}>
                 <polygon points="5 3 19 12 5 21 5 3"/>
               </svg>
             )}
           </button>
 
           {/* Speed Presets */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             {[0.75, 1.0, 1.25, 1.5].map((s) => (
               <button
                 key={s}
@@ -244,11 +244,12 @@ export default function AudioPlayer({ audioData, onDownload }) {
                 className="chip-btn"
                 onClick={() => handleSpeedChange(s)}
                 style={{
-                  background: playbackRate === s ? 'rgba(99, 102, 241, 0.25)' : undefined,
+                  background: playbackRate === s ? 'var(--accent-primary)' : undefined,
                   borderColor: playbackRate === s ? 'var(--accent-primary)' : undefined,
-                  color: playbackRate === s ? '#818cf8' : undefined,
-                  fontSize: '0.72rem',
-                  padding: '3px 8px'
+                  color: playbackRate === s ? '#ffffff' : undefined,
+                  fontSize: '0.86rem',
+                  padding: '5px 12px',
+                  fontWeight: 700
                 }}
               >
                 {s}x
@@ -258,8 +259,8 @@ export default function AudioPlayer({ audioData, onDownload }) {
         </div>
 
         {/* Volume & Actions */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <button
               type="button"
               onClick={toggleMute}
@@ -267,7 +268,7 @@ export default function AudioPlayer({ audioData, onDownload }) {
               title={isMuted ? 'Unmute' : 'Mute'}
             >
               {isMuted || volume === 0 ? (
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="1" y1="1" x2="23" y2="23"/>
                   <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"/>
                   <path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"/>
@@ -275,9 +276,8 @@ export default function AudioPlayer({ audioData, onDownload }) {
                   <line x1="8" y1="23" x2="16" y2="23"/>
                 </svg>
               ) : (
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-                  <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
                 </svg>
               )}
             </button>
@@ -288,7 +288,7 @@ export default function AudioPlayer({ audioData, onDownload }) {
               step="0.05"
               value={isMuted ? 0 : volume}
               onChange={handleVolumeChange}
-              style={{ width: '70px', height: '4px', cursor: 'pointer' }}
+              style={{ width: '80px', height: '6px', cursor: 'pointer' }}
             />
           </div>
 

@@ -12,10 +12,10 @@ export default function LanguageSelector({
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-        <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+        <label style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-primary)' }}>
           Spoken Language
         </label>
-        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+        <span style={{ fontSize: '0.92rem', color: 'var(--accent-primary)', fontWeight: 600 }}>
           {current ? `${current.flag} ${current.native}` : ''}
         </span>
       </div>

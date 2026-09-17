@@ -13,6 +13,18 @@ const apiClient = axios.create({
   }
 });
 
+// Request Interceptor: Automatically attach Auth Token if logged in
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('voxflow_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 // Response Interceptor: Format error messages clearly
 apiClient.interceptors.response.use(
   (response) => response.data,
@@ -32,19 +44,19 @@ apiClient.interceptors.response.use(
           message = serverMsg || 'Invalid request parameters. Please verify your text and voice selection.';
           break;
         case 401:
-          message = 'Authentication failure: TTS API credentials are invalid or missing.';
+          message = serverMsg || 'Authentication required. Please sign in.';
           break;
         case 404:
-          message = 'The requested TTS endpoint or voice model was not found.';
+          message = 'The requested endpoint or audio resource was not found.';
           break;
         case 429:
-          message = 'Rate limit exceeded: You have sent too many speech synthesis requests. Please wait a moment.';
+          message = 'Rate limit exceeded: You have sent too many requests. Please wait a moment.';
           break;
         case 500:
-          message = serverMsg || 'Internal Server Error: The TTS synthesis service encountered an error.';
+          message = serverMsg || 'Internal Server Error: Synthesis service encountered an issue.';
           break;
         case 503:
-          message = 'TTS Service Unavailable: Upstream speech synthesis provider is currently unreachable.';
+          message = 'TTS Service Unavailable: Upstream speech provider is currently unreachable.';
           break;
         default:
           message = serverMsg || `Server responded with status code ${status}.`;
@@ -63,11 +75,7 @@ apiClient.interceptors.response.use(
  * GET /api/health
  */
 export async function checkHealth() {
-  try {
-    return await apiClient.get('/health');
-  } catch (err) {
-    throw err;
-  }
+  return await apiClient.get('/health');
 }
 
 /**
@@ -75,27 +83,20 @@ export async function checkHealth() {
  * GET /api/voices
  */
 export async function getVoices() {
-  try {
-    return await apiClient.get('/voices');
-  } catch (err) {
-    throw err;
-  }
+  return await apiClient.get('/voices');
 }
 
 /**
  * Synthesize Speech API with Handshake & Fallback
  * POST /api/tts
- * @param {Object} payload { text, language, voice, speed, pitch }
  */
 export async function synthesizeSpeech(payload) {
   try {
-    // Attempt primary backend REST API communication
     const response = await apiClient.post('/tts', payload);
     return response;
   } catch (error) {
-    // If backend is in standby / not running, trigger client-side Web Speech fallback (Page 6 of PDF)
     if (error.statusCode === 0 || error.message.includes('Network error')) {
-      console.warn('[VoxFlow] Backend in standby. Activating Web Speech API fallback handshake...');
+      console.warn('[VoxFlow] Backend in standby. Activating Web Speech API fallback...');
       return synthesizeWebSpeechFallback(payload);
     }
     throw error;
@@ -103,44 +104,91 @@ export async function synthesizeSpeech(payload) {
 }
 
 /**
- * Client-Side Web Speech API Handshake Fallback (PDF Page 6: "Browser Web Speech API")
+ * Authentication APIs
  */
-function synthesizeWebSpeechFallback({ text, language, speed = 1.0, pitch = 0 }) {
+export async function loginUser(email, password) {
+  return await apiClient.post('/auth/login', { email, password });
+}
+
+export async function registerUser(name, email, password) {
+  return await apiClient.post('/auth/register', { name, email, password });
+}
+
+export async function getMe() {
+  return await apiClient.get('/auth/me');
+}
+
+export async function updateUserPassword(currentPassword, newPassword) {
+  return await apiClient.put('/auth/update-password', { currentPassword, newPassword });
+}
+
+/**
+ * User Personalized History APIs
+ */
+export async function fetchUserHistory() {
+  return await apiClient.get('/user/history');
+}
+
+export async function toggleFavoriteApi(historyId) {
+  return await apiClient.patch(`/user/history/${historyId}/favorite`);
+}
+
+export async function deleteHistoryApi(historyId) {
+  return await apiClient.delete(`/user/history/${historyId}`);
+}
+
+/**
+ * Client-Side Web Speech API Handshake Fallback
+ */
+function synthesizeWebSpeechFallback({ text, language, voice = '', speed = 1.0, pitch = 0 }) {
   return new Promise((resolve, reject) => {
     if (!('speechSynthesis' in window)) {
       return reject(new Error('Browser Web Speech API is not supported in this browser.'));
     }
 
-    window.speechSynthesis.cancel(); // Stop any pending utterances
+    window.speechSynthesis.cancel();
+
+    const isMale = /guy|madhur|niranjan|manohar|alvaro|henri|conrad|ryan|male/i.test(voice);
+    const isAria = /aria/i.test(voice);
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = language;
     utterance.rate = Math.max(0.5, Math.min(2.0, speed));
-    utterance.pitch = Math.max(0.5, Math.min(1.5, 1 + pitch / 100));
 
-    // Try to match matching voice in browser
+    const personaPitch = isMale ? 0.78 : isAria ? 1.22 : 1.05;
+    utterance.pitch = Math.max(0.4, Math.min(1.8, personaPitch * (1 + pitch / 100)));
+
     const voices = window.speechSynthesis.getVoices();
-    const matched = voices.find((v) => v.lang.startsWith(language.slice(0, 2)));
-    if (matched) {
-      utterance.voice = matched;
+    const langVoices = voices.filter((v) => 
+      v.lang.toLowerCase().replace('_', '-').startsWith(language.slice(0, 2).toLowerCase())
+    );
+
+    let matchedVoice = langVoices.find((v) => {
+      const name = v.name.toLowerCase();
+      if (isMale) return /david|mark|george|male|guy|ravi|hemant|pablo|stefan|claude/i.test(name);
+      if (isAria) return /aria|zira|expressive/i.test(name);
+      return /zira|susan|hazel|female|jenny|swara|kalpana|elena|denise|katja/i.test(name);
+    });
+
+    if (!matchedVoice && langVoices.length > 0) {
+      matchedVoice = isMale ? langVoices[langVoices.length - 1] : langVoices[0];
     }
 
-    utterance.onstart = () => {
-      console.log('[VoxFlow] Audio playback started via client handshake.');
-    };
+    if (matchedVoice) {
+      utterance.voice = matchedVoice;
+    }
 
     const words = text.trim().split(/\s+/).length;
     const estimatedDuration = Math.max(1, Math.round(words / (2.5 * speed)));
 
-    // Speak the utterance
     window.speechSynthesis.speak(utterance);
 
-    // Resolve handshake payload matching backend schema
     resolve({
       success: true,
       audioUrl: 'web-speech-active',
       duration: estimatedDuration,
       characterCount: text.length,
+      voice,
       mode: 'web-speech-handshake'
     });
   });
