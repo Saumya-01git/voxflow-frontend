@@ -101,26 +101,5 @@ npm run build
 
 ---
 
-## 📅 14-Day Structured Development Roadmap
-
-| Day | Milestone Focus | Status |
-|:---:|---|:---:|
-| **Day 1** | Requirement analysis, system architecture design, and API contracts | ✅ Completed |
-| **Day 2** | UI/UX design tokens, modern glassmorphic theme system, and layout grid | ✅ Completed |
-| **Day 3** | React + Vite client scaffold, modular component structure, and routing | ✅ Completed |
-| **Day 4** | `TextInput` with character counting, word metric pills, and validation | ✅ Completed |
-| **Day 5** | `LanguageSelector` & `VoiceSelector` with dynamic accent filtering | ✅ Completed |
-| **Day 6** | Axios API service layer, request/response interceptors, and error alerts | ✅ Completed |
-| **Day 7** | Client-backend handshake, Web Speech API fallback, and state orchestration | ✅ Completed |
-| **Day 8** | Express backend repository with modular MVC architecture & middleware | ✅ Completed |
-| **Day 9** | `/api/voices` and `/api/tts` routes with input sanitization & rate limits | ✅ Completed |
-| **Day 10** | Multi-language neural voice synthesis integration (Edge & Google engines) | ✅ Completed |
-| **Day 11** | Audio generation pipeline, disk caching, and static streaming delivery | ✅ Completed |
-| **Day 12** | Interactive `AudioPlayer` with tempo modulation, scrubbing, and soundwaves | ✅ Completed |
-| **Day 13** | MP3 download, document text reader (TXT/PDF), and audio history vault | ✅ Completed |
-| **Day 14** | Neon PostgreSQL cloud DB, password strength security, dark mode palette & cloud deployment on Vercel + Render | ✅ Completed |
-
----
-
 ## 📄 License
 This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
