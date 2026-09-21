@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import DownloadButton from './DownloadButton';
+import { resolveAudioUrl } from '../services/api';
 
 /**
  * Format seconds into mm:ss
@@ -22,7 +23,7 @@ export default function AudioPlayer({ audioData, onDownload }) {
   const [playbackRate, setPlaybackRate] = useState(1.0);
 
   const audioSrc = audioData?.audioUrl && audioData.audioUrl !== 'web-speech-active'
-    ? audioData.audioUrl
+    ? resolveAudioUrl(audioData.audioUrl)
     : null;
 
   // Reset states when new audio is supplied

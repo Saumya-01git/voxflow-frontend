@@ -566,7 +566,7 @@ export default function App() {
                       justifyContent: 'space-between',
                       padding: '12px 18px',
                       borderRadius: 'var(--radius-md)',
-                      background: 'var(--bg-card)',
+                      background: 'var(--bg-card-inner)',
                       border: '1.5px solid var(--border-color)',
                       color: 'var(--text-primary)',
                       cursor: 'pointer',
@@ -647,15 +647,12 @@ export default function App() {
               {filteredStories.map((story) => (
                 <div
                   key={story.id}
-                  className="fairy-card"
+                  className="fairy-card story-card"
                   style={{
                     padding: '26px',
                     display: 'flex',
                     flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    background: 'var(--bg-card)',
-                    border: '1.5px solid var(--border-color)',
-                    boxShadow: '0 4px 16px rgba(0,0,0,0.03)'
+                    justifyContent: 'space-between'
                   }}
                 >
                   <div>
@@ -677,7 +674,7 @@ export default function App() {
                     </p>
                   </div>
 
-                  <div style={{ borderTop: '1.5px solid rgba(226, 232, 240, 0.9)', paddingTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                  <div style={{ borderTop: '1.5px solid var(--border-color)', paddingTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
                     <div style={{ fontSize: '0.92rem', color: 'var(--text-muted)' }}>
                       Persona: <strong style={{ color: 'var(--accent-primary)', fontWeight: 700 }}>{story.voice.split('-')[2]?.replace('Neural', '') || story.voice}</strong>
                     </div>
@@ -771,16 +768,13 @@ export default function App() {
               {VOICES.map((v) => (
                 <div
                   key={v.id}
-                  className="fairy-card"
+                  className="fairy-card story-card"
                   style={{
                     padding: '22px',
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
-                    cursor: 'pointer',
-                    background: 'var(--bg-card)',
-                    border: '1.5px solid var(--border-color)',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
+                    cursor: 'pointer'
                   }}
                   onClick={() => {
                     setSelectedLanguage(v.language);

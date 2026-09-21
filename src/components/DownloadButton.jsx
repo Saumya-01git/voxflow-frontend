@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { resolveAudioUrl } from '../services/api';
 
 export default function DownloadButton({ audioUrl, filename = 'voxflow_speech.mp3', disabled = false }) {
   const { isAuthenticated, openAuth } = useAuth();
@@ -17,8 +18,9 @@ export default function DownloadButton({ audioUrl, filename = 'voxflow_speech.mp
     setIsDownloading(true);
 
     try {
-      if (audioUrl.startsWith('http') || audioUrl.startsWith('/audio/')) {
-        const res = await fetch(audioUrl);
+      const targetUrl = resolveAudioUrl(audioUrl);
+      if (targetUrl.startsWith('http') || targetUrl.startsWith('/audio/')) {
+        const res = await fetch(targetUrl);
         const blob = await res.blob();
         const blobUrl = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
@@ -38,7 +40,7 @@ export default function DownloadButton({ audioUrl, filename = 'voxflow_speech.mp
       }
     } catch (err) {
       console.warn('Direct download fetch failed, opening link directly:', err);
-      window.open(audioUrl, '_blank');
+      window.open(targetUrl, '_blank');
     } finally {
       setIsDownloading(false);
     }

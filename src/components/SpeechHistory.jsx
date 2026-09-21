@@ -152,7 +152,7 @@ export default function SpeechHistory({
                 justifyContent: 'space-between',
                 padding: '16px 20px',
                 borderRadius: 'var(--radius-md)',
-                background: 'var(--bg-card)',
+                background: 'var(--bg-card-inner)',
                 border: '1.5px solid var(--border-color)',
                 boxShadow: '0 2px 6px rgba(0, 0, 0, 0.02)',
                 transition: 'var(--transition)',

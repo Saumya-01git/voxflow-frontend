@@ -1,7 +1,19 @@
 import axios from 'axios';
 
-// Resolve Backend API base URL
+// Resolve Backend API base URL & root host for static audio
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+export const BACKEND_ROOT = API_BASE_URL.replace(/\/api\/?$/, '');
+
+/**
+ * Resolve audio URL to absolute production domain if relative
+ */
+export function resolveAudioUrl(url) {
+  if (!url || url === 'web-speech-active') return url;
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('blob:')) {
+    return url;
+  }
+  return `${BACKEND_ROOT}${url.startsWith('/') ? '' : '/'}${url}`;
+}
 
 // Create configured Axios instance
 const apiClient = axios.create({
@@ -93,6 +105,9 @@ export async function getVoices() {
 export async function synthesizeSpeech(payload) {
   try {
     const response = await apiClient.post('/tts', payload);
+    if (response?.audioUrl && response.audioUrl !== 'web-speech-active') {
+      response.audioUrl = resolveAudioUrl(response.audioUrl);
+    }
     return response;
   } catch (error) {
     if (error.statusCode === 0 || error.message.includes('Network error')) {
@@ -126,7 +141,14 @@ export async function updateUserPassword(currentPassword, newPassword) {
  * User Personalized History APIs
  */
 export async function fetchUserHistory() {
-  return await apiClient.get('/user/history');
+  const history = await apiClient.get('/user/history');
+  if (Array.isArray(history)) {
+    return history.map((item) => ({
+      ...item,
+      audioUrl: resolveAudioUrl(item.audioUrl)
+    }));
+  }
+  return history;
 }
 
 export async function toggleFavoriteApi(historyId) {
