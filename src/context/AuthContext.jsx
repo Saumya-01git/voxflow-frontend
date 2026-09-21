@@ -42,7 +42,6 @@ export function AuthProvider({ children }) {
       localStorage.setItem('voxflow_token', data.token);
       setToken(data.token);
       setUser(data.user);
-      setAuthModalOpen(false);
       return data;
     }
   };
@@ -53,7 +52,6 @@ export function AuthProvider({ children }) {
       localStorage.setItem('voxflow_token', data.token);
       setToken(data.token);
       setUser(data.user);
-      setAuthModalOpen(false);
       return data;
     }
   };

@@ -26,6 +26,7 @@ export default function AuthModal() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!authModalOpen) return null;
@@ -35,16 +36,27 @@ export default function AuthModal() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
+    setSuccessMessage(null);
     setIsSubmitting(true);
 
     try {
       if (mode === 'login') {
-        await login(email, password);
+        const data = await login(email, password);
+        setSuccessMessage(`✓ Signed in successfully! Welcome back, ${data?.user?.name || 'User'}!`);
+        setTimeout(() => {
+          setSuccessMessage(null);
+          closeAuth();
+        }, 1200);
       } else {
         if (!name.trim()) {
           throw new Error('Please enter your full name.');
         }
-        await register(name, email, password);
+        const data = await register(name, email, password);
+        setSuccessMessage(`🎉 Account created successfully! Welcome to VoxFlow, ${data?.user?.name || name}!`);
+        setTimeout(() => {
+          setSuccessMessage(null);
+          closeAuth();
+        }, 1400);
       }
     } catch (err) {
       setError(err.message || 'Authentication failed. Please check your credentials.');
@@ -153,6 +165,29 @@ export default function AuthModal() {
             style={{ marginBottom: '20px', fontSize: '0.94rem' }}
           >
             <span>{error}</span>
+          </div>
+        )}
+
+        {/* Success Alert */}
+        {successMessage && (
+          <div 
+            className="animate-fade-in"
+            style={{
+              background: 'rgba(34, 197, 94, 0.16)',
+              border: '1.5px solid rgba(34, 197, 94, 0.55)',
+              borderRadius: 'var(--radius-md)',
+              padding: '14px 18px',
+              marginBottom: '20px',
+              fontSize: '0.98rem',
+              color: '#16a34a',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              fontWeight: 700
+            }}
+          >
+            <span style={{ fontSize: '1.25rem' }}>🎉</span>
+            <span>{successMessage}</span>
           </div>
         )}
 
@@ -336,10 +371,14 @@ export default function AuthModal() {
           <button
             type="submit"
             className="btn-primary"
-            disabled={isSubmitting}
+            disabled={isSubmitting || Boolean(successMessage)}
             style={{ width: '100%', marginTop: '6px', padding: '15px' }}
           >
-            {isSubmitting ? 'Authenticating...' : mode === 'login' ? 'Sign In to Account' : 'Create Free Account'}
+            {isSubmitting 
+              ? (mode === 'login' ? 'Signing In...' : 'Creating Account...') 
+              : successMessage 
+                ? '✓ Success! Redirecting...' 
+                : mode === 'login' ? 'Sign In to Account' : 'Create Free Account'}
           </button>
         </form>
       </div>
